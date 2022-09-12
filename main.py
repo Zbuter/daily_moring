@@ -1,4 +1,5 @@
-from datetime import date, datetime
+from datetime import date
+import datetime
 import math
 from wechatpy import WeChatClient
 from wechatpy.client.api import WeChatMessage, WeChatTemplate
@@ -7,6 +8,11 @@ import os
 import random
 
 today = datetime.now()
+
+today1 =datetime.date.today()
+
+today2=today1.year+"年"+today1.month+"月"+today1.day+"日"
+
 start_date = os.environ['START_DATE']
 city = os.environ['CITY']
 birthday = os.environ['BIRTHDAY']
@@ -16,13 +22,21 @@ app_secret = os.environ["APP_SECRET"]
 
 user_id = os.environ["USER_ID"]
 template_id = os.environ["TEMPLATE_ID"]
-
+url = "http://autodev.openspeech.cn/csp/api/v2.1/weather?openId=aiuicus&clientType=android&sign=android&city=" + city
+res = requests.get(url).json()
+weather = res['data']['list'][0]
 
 def get_weather():
-  url = "http://autodev.openspeech.cn/csp/api/v2.1/weather?openId=aiuicus&clientType=android&sign=android&city=" + city
-  res = requests.get(url).json()
-  weather = res['data']['list'][0]
+
   return weather['weather'], math.floor(weather['temp'])
+
+
+  def get_weather_high():
+    return weather['weather'], math.floor(weather['high'])
+
+
+def get_weather_low():
+    return weather['weather'], math.floor(weather['low'])
 
 def get_count():
   delta = today - datetime.strptime(start_date, "%Y-%m-%d")
@@ -48,6 +62,6 @@ client = WeChatClient(app_id, app_secret)
 
 wm = WeChatMessage(client)
 wea, temperature = get_weather()
-data = {"weather":{"value":wea},"temperature":{"value":temperature},"love_days":{"value":get_count()},"birthday_left":{"value":get_birthday()},"words":{"value":get_words(), "color":get_random_color()}}
+data = {"weather":{"value":wea},"temperature":{"value":temperature},"love_days":{"value":get_count()},"data":{"value":today2},"high":{"value":get_weather_high()},"low":{"value":get_weather_low()},"birthday_left":{"value":get_birthday()},"love_words":{"value":get_words(), "color":get_random_color()}}
 res = wm.send_template(user_id, template_id, data)
 print(res)
